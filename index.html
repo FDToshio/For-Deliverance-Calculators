@@ -45,18 +45,16 @@ from collections import Counter
 import json
 
 def exact_dist_2d10_plus_U():
-    # U = d2 * (d2 + 2 - d6)
+    # CHANGED: U = d6 - 4  (range -3..+2)
     c = Counter()
     total = 0
     for d10a in range(1, 11):
         for d10b in range(1, 11):
             base = d10a + d10b
-            for d2a in range(1, 3):
-                for d2b in range(1, 3):
-                    for d6 in range(1, 7):
-                        U = d2a * (d2b + 2 - d6)
-                        c[base + U] += 1
-                        total += 1
+            for d6 in range(1, 7):
+                U = d6 - 3
+                c[base + U] += 1
+                total += 1
     return c, total
 
 def shifted_dist(ATK, DEF):
@@ -100,7 +98,8 @@ json.dumps(payload)
   document.getElementById("summary").textContent =
     `Success: ${successRate.toFixed(3)}% (${payload.success_freq}/${payload.total})\n` +
     `Crit:    ${critRate.toFixed(3)}% (${payload.crit_freq}/${payload.total})\n` +
-    `Crit|Hit:${critOnHit.toFixed(3)}% (${payload.crit_freq}/${payload.success_freq})`;
+    `Crit|Hit:${critOnHit.toFixed(3)}% (${payload.crit_freq}/${payload.success_freq})\n` +
+    `U = d6 - 3`;
 
   const trace = {
     x: xs,
@@ -111,7 +110,7 @@ json.dumps(payload)
   };
 
   const layout = {
-    title: `Exact Distribution: 2d10 + ATK(${ATK}) - DEF(${DEF}) + U`,
+    title: `Exact Distribution: 2d10 + ATK(${ATK}) - DEF(${DEF}) + U (U=d6-3)`,
     xaxis: { title: "Roll", dtick: 2 },
     yaxis: { title: "Frequency (%)", rangemode: "tozero" },
     shapes: [
@@ -138,4 +137,3 @@ init();
 </script>
 </body>
 </html>
-
