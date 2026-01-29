@@ -44,8 +44,11 @@ async function computeAndPlot() {
 from collections import Counter
 import json
 
+T = 8
+CRIT_T = T + 10  # 18
+
 def exact_dist_2d10_plus_U():
-    # CHANGED: U = d6 - 4  (range -3..+2)
+    # U = d6 - 4  (range -3..+2)
     c = Counter()
     total = 0
     for d10a in range(1, 11):
@@ -69,15 +72,17 @@ dist, total = shifted_dist(${ATK}, ${DEF})
 xs = sorted(dist.keys())
 ys = [dist[x]/total*100 for x in xs]
 
-success_freq = sum(f for x,f in dist.items() if x >= 0)
-crit_freq = sum(f for x,f in dist.items() if x >= 17)
+success_freq = sum(f for x,f in dist.items() if x >= T)
+crit_freq = sum(f for x,f in dist.items() if x >= CRIT_T)
 
 payload = {
   "xs": xs,
   "ys": ys,
   "success_freq": success_freq,
   "crit_freq": crit_freq,
-  "total": total
+  "total": total,
+  "T": T,
+  "CRIT_T": CRIT_T
 }
 json.dumps(payload)
   `;
@@ -87,9 +92,15 @@ json.dumps(payload)
 
   const xs = payload.xs;
   const ys = payload.ys;
+  const T = payload.T;
+  const CRIT_T = payload.CRIT_T;
 
-  // Color per bin: fail (<0), crit (>=17), else success
-  const colors = xs.map(x => (x < 0 ? "red" : (x >= 17 ? "cyan" : "green")));
+  // Color per bin: fail (<T), crit (>=CRIT_T), else success
+  const colors = xs.map(x =>
+    (x < T) ? "red" :
+    (x >= CRIT_T) ? "cyan" :
+    "green"
+  );
 
   const successRate = payload.success_freq / payload.total * 100;
   const critRate = payload.crit_freq / payload.total * 100;
@@ -99,7 +110,7 @@ json.dumps(payload)
     `Success: ${successRate.toFixed(3)}% (${payload.success_freq}/${payload.total})\n` +
     `Crit:    ${critRate.toFixed(3)}% (${payload.crit_freq}/${payload.total})\n` +
     `Crit|Hit:${critOnHit.toFixed(3)}% (${payload.crit_freq}/${payload.success_freq})\n` +
-    `U = d6 - 4`;
+    `U = d6 - 4 | Hit ≥ ${T} | Crit ≥ ${CRIT_T}`;
 
   const trace = {
     x: xs,
@@ -110,20 +121,22 @@ json.dumps(payload)
   };
 
   const layout = {
-    title: `Exact Distribution: 2d10 + ATK(${ATK}) - DEF(${DEF}) + U (U=d6-4)`,
+    title: `Exact Distribution: 2d10 + ATK(${ATK}) - DEF(${DEF}) + U (U=d6-4, T=${T})`,
     xaxis: { title: "Roll", dtick: 2 },
     yaxis: { title: "Frequency (%)", rangemode: "tozero" },
     shapes: [
-      // Threshold lines
-      { type:"line", x0:-0.5, x1:-0.5, y0:0, y1:1, xref:"x", yref:"paper",
+      // Threshold lines at boundaries between integers
+      { type:"line", x0:T-0.5, x1:T-0.5, y0:0, y1:1, xref:"x", yref:"paper",
         line:{color:"black", width:2, dash:"dash"} },
-      { type:"line", x0:16.5, x1:16.5, y0:0, y1:1, xref:"x", yref:"paper",
+      { type:"line", x0:CRIT_T-0.5, x1:CRIT_T-0.5, y0:0, y1:1, xref:"x", yref:"paper",
         line:{color:"black", width:2, dash:"dash"} },
-      // Failure shade
-      { type:"rect", x0:xs[0]-0.5, x1:-0.5, y0:0, y1:1, xref:"x", yref:"paper",
+
+      // Failure shade (x < T)
+      { type:"rect", x0:xs[0]-0.5, x1:T-0.5, y0:0, y1:1, xref:"x", yref:"paper",
         fillcolor:"rgba(255,0,0,0.15)", line:{width:0} },
-      // Crit shade
-      { type:"rect", x0:16.5, x1:xs[xs.length-1]+0.5, y0:0, y1:1, xref:"x", yref:"paper",
+
+      // Crit shade (x >= CRIT_T)
+      { type:"rect", x0:CRIT_T-0.5, x1:xs[xs.length-1]+0.5, y0:0, y1:1, xref:"x", yref:"paper",
         fillcolor:"rgba(0,255,255,0.15)", line:{width:0} }
     ],
     margin: { t: 60, r: 20, b: 60, l: 60 }
