@@ -137,8 +137,8 @@ json.dumps(payload)
     hovertemplate: "X=A−DEF=%{x}<br>%{y:.3f}%<extra></extra>"
   };
 
-  const hitLineX = HIT_T - 0.5;
-  const critLineX = critThresholdOnX - 0.5;
+  const hitLineX = 7 - 0.5;
+  const critLineX = 20 - 0.5;
 
   // Always include hit line + miss shading; include crit line/shading only if crit possible
   const shapes = [
