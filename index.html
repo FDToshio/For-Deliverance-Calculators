@@ -77,7 +77,7 @@ ys = [dist[x]/total*100 for x in xs]
 # Hit if A >= DEF + 7  -> (2d10 + ATK - DEF) >= 7
 success_freq = sum(f for x,f in dist.items() if x >= T)
 
-# Crit if A >= 20 -> (2d10 + ATK - DEF) >= (20 - DEF)
+# Crit if A >= 20 -> (2d10 + ATK - DEF) >= (20)
 # Since dist is already shifted by (ATK - DEF), the crit threshold depends on DEF:
 crit_threshold_shifted = CRIT_T - ${DEF}
 crit_freq = sum(f for x,f in dist.items() if x >= crit_threshold_shifted)
